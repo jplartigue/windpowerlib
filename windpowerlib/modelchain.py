@@ -321,7 +321,7 @@ class ModelChain(object):
             )
         return density_hub
 
-    def wind_speed_hub(self, weather_df):
+    def wind_speed_hub(self, weather_df, roughness_length=None):
         r"""
         Calculates the wind speed at hub height.
 
@@ -338,7 +338,7 @@ class ModelChain(object):
             measured at a height of 10 m). See documentation of
             :func:`ModelChain.run_model` for an example on how to create the
             weather_df DataFrame.
-
+        roughness_length : Holmium override to optimize effective best roughness_length
         Returns
         -------
         :pandas:`pandas.Series<series>` or numpy.array
@@ -355,6 +355,7 @@ class ModelChain(object):
                 self.power_plant.hub_height
             ]
         elif self.wind_speed_model == "logarithmic":
+            roughness_length = roughness_length if roughness_length is not None else weather_df["roughness_length"].iloc[:, 0]
             logging.debug(
                 "Calculating wind speed using logarithmic wind " "profile."
             )
@@ -371,10 +372,11 @@ class ModelChain(object):
                 weather_df["wind_speed"][closest_height],
                 closest_height,
                 self.power_plant.hub_height,
-                weather_df["roughness_length"].iloc[:, 0],
+                roughness_length,
                 self.obstacle_height,
             )
         elif self.wind_speed_model == "hellman":
+            roughness_length = roughness_length if roughness_length is not None else weather_df["roughness_length"].iloc[:, 0]
             logging.debug("Calculating wind speed using hellman equation.")
             closest_height = weather_df["wind_speed"].columns[
                 min(
@@ -389,7 +391,7 @@ class ModelChain(object):
                 weather_df["wind_speed"][closest_height],
                 closest_height,
                 self.power_plant.hub_height,
-                weather_df["roughness_length"].iloc[:, 0],
+                roughness_length,
                 self.hellman_exp,
             )
         elif self.wind_speed_model == "interpolation_extrapolation":

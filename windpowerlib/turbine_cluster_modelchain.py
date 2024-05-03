@@ -83,6 +83,9 @@ class TurbineClusterModelChain(ModelChain):
 
         Default: 'wind_farm_power_curves'.
 
+    turbulence_intensity : float
+        Holmium override turbulence intensity for optimization
+
     Other Parameters
     ----------------
     wind_speed_model :
@@ -151,6 +154,7 @@ class TurbineClusterModelChain(ModelChain):
         block_width=0.5,
         standard_deviation_method="turbulence_intensity",
         smoothing_order="wind_farm_power_curves",
+        turbulence_intensity=None,
         **kwargs,
     ):
         super(TurbineClusterModelChain, self).__init__(power_plant, **kwargs)
@@ -161,11 +165,13 @@ class TurbineClusterModelChain(ModelChain):
         self.block_width = block_width
         self.standard_deviation_method = standard_deviation_method
         self.smoothing_order = smoothing_order
+        self.const_turbulence_intensity = turbulence_intensity
 
         self.power_curve = None
         self.power_output = None
 
-    def assign_power_curve(self, weather_df):
+    def assign_power_curve(self, weather_df, roughness_length=None, turbulence_intensity=None,
+                           wind_speed_range=15, mean_gauss=0):
         r"""
         Calculates the power curve of the wind turbine cluster.
 
@@ -187,22 +193,32 @@ class TurbineClusterModelChain(ModelChain):
             at a height close to the hub height, as it cannot be inter- or
             extrapolated.
 
+        roughness_length : Holmium overrides
+        turbulence_intensity : Holmium overrides
+        wind_speed_range : Holmium overrides (smooth_power_curve impact)
+        mean_gauss : Holmium overrides (smooth_power_curve impact)
         Returns
         -------
         self
 
         """
         # Get turbulence intensity from weather if existent
-        turbulence_intensity = (
-            weather_df["turbulence_intensity"].values.mean()
-            if "turbulence_intensity" in weather_df.columns.get_level_values(0)
-            else None
-        )
-        roughness_length = (
-            weather_df["roughness_length"].values.mean()
-            if "roughness_length" in weather_df.columns.get_level_values(0)
-            else None
-        )
+        if turbulence_intensity is not None:
+            turbulence_intensity = turbulence_intensity
+        elif self.const_turbulence_intensity is not None:
+            turbulence_intensity = self.const_turbulence_intensity
+        elif "turbulence_intensity" in weather_df.columns.get_level_values(0):
+            turbulence_intensity = weather_df["turbulence_intensity"].values.mean()
+        else:
+            turbulence_intensity = None
+
+        if roughness_length is not None:
+            roughness_length = roughness_length
+        elif "roughness_length" in weather_df.columns.get_level_values(0):
+            roughness_length = weather_df["roughness_length"].iloc[:, 0]
+        else:
+            roughness_length = None
+
         # Assign power curve
         if (
             self.wake_losses_model == "wind_farm_efficiency"
@@ -233,6 +249,7 @@ class TurbineClusterModelChain(ModelChain):
             smoothing_order=self.smoothing_order,
             roughness_length=roughness_length,
             turbulence_intensity=turbulence_intensity,
+            wind_speed_range=wind_speed_range, mean_gauss=mean_gauss,
         )
         # Further logging messages
         if self.smoothing is False:
@@ -245,7 +262,8 @@ class TurbineClusterModelChain(ModelChain):
 
         return self
 
-    def run_model(self, weather_df):
+    def run_model(self, weather_df, roughness_length=None, turbulence_intensity=None,
+                  wind_speed_range=15, mean_gauss=0,):
         r"""
         Runs the model.
 
@@ -264,6 +282,10 @@ class TurbineClusterModelChain(ModelChain):
             measured at a height of 10 m). See below for an example on how to
             create the weather_df DataFrame.
 
+        roughness_length : Holmium overrides
+        turbulence_intensity : Holmium overrides
+        wind_speed_range : Holmium overrides (smooth_power_curve impact)
+        mean_gauss : Holmium overrides (smooth_power_curve impact)
         Returns
         -------
         self
@@ -290,9 +312,10 @@ class TurbineClusterModelChain(ModelChain):
         """
         weather_df = data.check_weather_data(weather_df)
 
-        self.assign_power_curve(weather_df)
+        self.assign_power_curve(weather_df, roughness_length=roughness_length, turbulence_intensity=turbulence_intensity,
+                                wind_speed_range=wind_speed_range, mean_gauss=mean_gauss,)
         self.power_plant.mean_hub_height()
-        wind_speed_hub = self.wind_speed_hub(weather_df)
+        wind_speed_hub = self.wind_speed_hub(weather_df, roughness_length=roughness_length)
         density_hub = (
             None
             if (

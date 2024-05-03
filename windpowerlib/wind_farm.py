@@ -307,6 +307,7 @@ class WindFarm(object):
         standard_deviation_method="turbulence_intensity",
         smoothing_order="wind_farm_power_curves",
         turbulence_intensity=None,
+        wind_speed_range=15, mean_gauss=0,
         **kwargs,
     ):
         r"""
@@ -350,6 +351,8 @@ class WindFarm(object):
             Roughness length. If `standard_deviation_method` is
             'turbulence_intensity' and `turbulence_intensity` is not given
             the turbulence intensity is calculated via the roughness length.
+        wind_speed_range : Holmium overrides (smooth_power_curve impact)
+        mean_gauss : Holmium overrides (smooth_power_curve impact)
 
         Returns
         -------
@@ -367,6 +370,7 @@ class WindFarm(object):
                 )
         # Initialize data frame for power curve values
         df = pd.DataFrame()
+        kwargs["turbulence_intensity"] = turbulence_intensity
         for ix, row in self.wind_turbine_fleet.iterrows():
             # Check if needed parameters are available and/or assign them
             if smoothing:
@@ -456,14 +460,27 @@ class WindFarm(object):
         wind_farm_power_curve.reset_index(inplace=True)
         # Apply power curve smoothing and consideration of wake losses
         # after the summation
+        # debug_plot = True
+        # debug_plot = False
         if smoothing and smoothing_order == "wind_farm_power_curves":
+            # if debug_plot:
+            #     dfp = pd.DataFrame()
+            #     dfp['original'] = wind_farm_power_curve['value']
             wind_farm_power_curve = power_curves.smooth_power_curve(
                 wind_farm_power_curve["wind_speed"],
                 wind_farm_power_curve["value"],
                 standard_deviation_method=standard_deviation_method,
                 block_width=block_width,
+                wind_speed_range=wind_speed_range, mean_gauss=mean_gauss,
                 **kwargs,
             )
+
+            # if debug_plot:
+            #     dfp['smooth'] = wind_farm_power_curve2['value']
+            #     dfp["wind_speed"] = wind_farm_power_curve["wind_speed"]
+            #     dfp = dfp.set_index("wind_speed")
+            #     dfp.plot()
+
         if wake_losses_model == "wind_farm_efficiency":
             if self.efficiency is not None:
                 wind_farm_power_curve = (

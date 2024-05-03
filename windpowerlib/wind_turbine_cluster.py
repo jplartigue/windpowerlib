@@ -132,6 +132,7 @@ class WindTurbineCluster(object):
         standard_deviation_method="turbulence_intensity",
         smoothing_order="wind_farm_power_curves",
         turbulence_intensity=None,
+        wind_speed_range=15, mean_gauss=0,
         **kwargs,
     ):
         r"""
@@ -178,7 +179,8 @@ class WindTurbineCluster(object):
             Roughness length. If `standard_deviation_method` is
             'turbulence_intensity' and `turbulence_intensity` is not given
             the turbulence intensity is calculated via the roughness length.
-
+        wind_speed_range : Holmium overrides (smooth_power_curve impact)
+        mean_gauss : Holmium overrides (smooth_power_curve impact)
         Returns
         -------
         :class:`~.wind_turbine_cluster.WindTurbineCluster`
@@ -198,6 +200,7 @@ class WindTurbineCluster(object):
                 standard_deviation_method=standard_deviation_method,
                 smoothing_order=smoothing_order,
                 turbulence_intensity=turbulence_intensity,
+                wind_speed_range=wind_speed_range, mean_gauss=mean_gauss,
                 **kwargs,
             )
         # Create data frame from power curves of all wind farms

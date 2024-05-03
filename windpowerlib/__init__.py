@@ -1,6 +1,6 @@
 __copyright__ = "Copyright oemof developer group"
 __license__ = "MIT"
-__version__ = "0.2.3dev"
+__version__ = "0.2.3.hofork"
 
 from .wind_turbine import WindTurbine  # noqa: F401
 from .data import get_turbine_types  # noqa: F401
