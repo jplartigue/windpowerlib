@@ -321,7 +321,7 @@ class ModelChain(object):
             )
         return density_hub
 
-    def wind_speed_hub(self, weather_df, roughness_length=None):
+    def wind_speed_hub(self, weather_df, roughness_length=None, hub_height_offset=0):
         r"""
         Calculates the wind speed at hub height.
 
@@ -339,6 +339,7 @@ class ModelChain(object):
             :func:`ModelChain.run_model` for an example on how to create the
             weather_df DataFrame.
         roughness_length : Holmium override to optimize effective best roughness_length
+        hub_height_offset : Holmium override to optimize effective best hub height
         Returns
         -------
         :pandas:`pandas.Series<series>` or numpy.array
@@ -417,7 +418,7 @@ class ModelChain(object):
                 "'logarithmic', 'hellman', 'interpolation_extrapolation' "
                 + "or 'log_interpolation_extrapolation'."
             )
-        return wind_speed_hub
+        return wind_speed_hub + hub_height_offset
 
     def calculate_power_output(self, wind_speed_hub, density_hub):
         r"""

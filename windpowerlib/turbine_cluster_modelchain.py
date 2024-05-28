@@ -263,7 +263,7 @@ class TurbineClusterModelChain(ModelChain):
         return self
 
     def run_model(self, weather_df, roughness_length=None, turbulence_intensity=None,
-                  wind_speed_range=15, mean_gauss=0,):
+                  wind_speed_range=15, mean_gauss=0, hub_height_offset=0):
         r"""
         Runs the model.
 
@@ -286,6 +286,7 @@ class TurbineClusterModelChain(ModelChain):
         turbulence_intensity : Holmium overrides
         wind_speed_range : Holmium overrides (smooth_power_curve impact)
         mean_gauss : Holmium overrides (smooth_power_curve impact)
+        hub_height_offset : Holmium overrides (wind interp impact)
         Returns
         -------
         self
@@ -314,7 +315,7 @@ class TurbineClusterModelChain(ModelChain):
 
         self.assign_power_curve(weather_df, roughness_length=roughness_length, turbulence_intensity=turbulence_intensity,
                                 wind_speed_range=wind_speed_range, mean_gauss=mean_gauss,)
-        self.power_plant.mean_hub_height()
+        self.power_plant.mean_hub_height(hub_height_offset=hub_height_offset)
         wind_speed_hub = self.wind_speed_hub(weather_df, roughness_length=roughness_length)
         density_hub = (
             None

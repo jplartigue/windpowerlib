@@ -254,7 +254,7 @@ class WindFarm(object):
     def nominal_power(self, nominal_power):
         self._nominal_power = nominal_power
 
-    def mean_hub_height(self):
+    def mean_hub_height(self, hub_height_offset=0):
         r"""
         Calculates the mean hub height of the wind farm.
 
@@ -296,7 +296,7 @@ class WindFarm(object):
                 for ix, row in self.wind_turbine_fleet.iterrows()
             )
             / self.nominal_power
-        )
+        ) + hub_height_offset
         return self
 
     def assign_power_curve(
